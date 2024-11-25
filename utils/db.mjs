@@ -1,82 +1,52 @@
+// utils/db.mjs
 import { MongoClient } from 'mongodb';
 
 class DBClient {
-  constructor() {
-    this.is_connected = false;
-    this.host = process.env.DB_HOST || 'localhost';
-    this.port = process.env.DB_PORT || '27017';
-    this.database = process.env.DB_DATABASE || 'files_manager';
-    this.client = new MongoClient(`mongodb://${this.host}:${this.port}`, { useUnifiedTopology: true });
-  }
+    constructor() {
+        const host = process.env.DB_HOST || 'localhost';
+        const port = process.env.DB_PORT || 27017;
+        const database = process.env.DB_DATABASE || 'files_manager';
+        const uri = `mongodb://${host}:${port}/${database}`;
 
-  isAlive(callback) {
-    this.client.connect((err) => {
-      if (err) {
-        console.log(`Error connecting to MongoDB: ${err}`);
-        callback(false);
-      } else {
-        this.client.db(this.database).command({ ping: 1 }, (err, result) => {
-          if (err) {
-            console.log(`Error pinging MongoDB: ${err}`);
-            callback(false);
-          } else {
-            callback(true);
-          }
-        });
-      }
-    });
-  }
+        this.client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+        this.isConnected = false;
 
-  nbUsers(callback) {
-    this.client.connect((err) => {
-      if (err) {
-        console.log(`Error connecting to MongoDB: ${err}`);
-        callback(null);
-      } else {
-        const db = this.client.db(this.database);
+        this.connect();
+    }
+
+    async connect() {
+        try {
+            await this.client.connect();
+            this.isConnected = true;
+        } catch (error) {
+            console.error('Connection to MongoDB failed:', error);
+            this.isConnected = false;
+        }
+    }
+
+    isAlive() {
+        return this.isConnected;
+    }
+
+    async nbUsers() {
+        if (!this.isConnected) {
+            throw new Error('Database not connected');
+        }
+        const db = this.client.db();
         const usersCollection = db.collection('users');
-        usersCollection.countDocuments((err, count) => {
-          if (err) {
-            console.log(`Error counting users: ${err}`);
-            callback(null);
-          } else {
-            this.client.close((err) => {
-              if (err) {
-                console.log(`Error closing MongoDB connection: ${err}`);
-              }
-              callback(count);
-            });
-          }
-        });
-      }
-    });
-  }
+        return await usersCollection.countDocuments();
+    }
 
-  nbFiles(callback) {
-    this.client.connect((err) => {
-      if (err) {
-        console.log(`Error connecting to MongoDB: ${err}`);
-        callback(null);
-      } else {
-        const db = this.client.db(this.database);
-        const usersCollection = db.collection('files');
-        usersCollection.countDocuments((err, count) => {
-          if (err) {
-            console.log(`Error counting files: ${err}`);
-            callback(null);
-          } else {
-            this.client.close((err) => {
-              if (err) {
-                console.log(`Error closing MongoDB connection: ${err}`);
-              }
-              callback(count);
-            });
-          }
-        });
-      }
-    });
-  }
+    async nbFiles() {
+        if (!this.isConnected) {
+            throw new Error('Database not connected');
+        }
+        const db = this.client.db();
+        const filesCollection = db.collection('files');
+        return await filesCollection.countDocuments();
+    }
 }
 
+// Create and export an instance of DBClient
 const dbClient = new DBClient();
-export { dbClient as default };
+export default dbClient;
