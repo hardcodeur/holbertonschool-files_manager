@@ -16,15 +16,17 @@ class DBClient {
   }
 
   async nbUsers() {
-    const usersCount = this.db.collection('users').countDocuments();
+    const collection = this.db.collection('users');
+    const usersCount = await collection.countDocuments({});
     return usersCount;
   }
 
   async nbFiles() {
-    const filesCount = this.db.collection('files').countDocuments();
+    const collection = this.db.collection('files');
+    const filesCount = await collection.countDocuments();
     return filesCount;
   }
 }
 
 const dbClient = new DBClient();
-export default dbClient;
+export { dbClient as default };
