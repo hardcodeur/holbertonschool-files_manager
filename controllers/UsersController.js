@@ -1,4 +1,5 @@
 import dbClient from "../utils/db.mjs";
+import redisClient  from "../utils/redis.mjs";
 
 const postNew = async(req, res)=>{
     const {email,password}= req.body;
@@ -18,4 +19,27 @@ const postNew = async(req, res)=>{
     return res.status(201).json(lastInsert);
 }
 
-module.exports = {postNew};
+const getMe = async (req,res) => {
+    const authorizationHeader = req.get('X-Token');
+    if(!authorizationHeader){
+        return res.status(401).json({error : "Unauthorized"});
+    }
+
+    const token = authorizationHeader.trim();
+    const key = `auth_${token}`;
+
+    const userCacheId = await redisClient.get(key);
+    if(!userCacheId){
+        return res.status(401).json({error : "Unauthorized"});
+    }
+
+    const user = await dbClient.getUserById(userCacheId);
+    if(!user){
+        return res.status(401);
+    }
+    console.log(user);
+    return res.json(user);
+
+}
+
+module.exports = {postNew,getMe};

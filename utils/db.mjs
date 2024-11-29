@@ -1,6 +1,7 @@
-import { MongoClient } from 'mongodb';
+import pkg from 'mongodb';
 import crypto from "crypto";
-import { log } from 'console';
+
+const { MongoClient } = pkg;
 
 const host = process.env.DB_HOST || 'localhost';
 const port = process.env.DB_PORT || 27017;
@@ -9,6 +10,10 @@ const database = process.env.DB_DATABASE || 'files_manager';
 class DBClient {
   constructor() {
     MongoClient.connect(`mongodb://${host}:${port}`, { useUnifiedTopology: true }, (err, client) => {
+      if(err){
+        console.log(err.message);
+        this.db = false;
+      }
       this.db = client.db(database);
     });
   }
@@ -29,22 +34,35 @@ class DBClient {
     return filesCount;
   }
 
-  async userEmailExist(userEmail){
-    const collection = this.db.collection('users');
-    let email = await collection.find({email : userEmail}).toArray();
-    return ( email.length > 0 ) ? true : false;
-  }
-
+  
   async insertNewUser(userEmail, userPass){
     const collection = this.db.collection('users');
     const passHash = crypto.createHash('sha1').update(userPass).digest('hex');
     const insertResult = await collection.insertOne({email : userEmail,password : passHash});
     return {email: userEmail,id :insertResult.insertedId};
   }
+  
+  async userEmailExist(userEmail){
+    const collection = this.db.collection('users');
+    let email = await collection.findOne({email : userEmail});
+    return ( email ) ? true : false;
+  }
+
+  async getUser(userEmail, userPass){
+    const collection = this.db.collection('users');
+    const passHash = crypto.createHash('sha1').update(userPass).digest('hex');
+    let user = await collection.findOne({email : userEmail,password:passHash});
+    return (user) ? {id:user._id} : false;
+  }
+
+  async getUserById(userId){
+    const collection = this.db.collection('users');
+    let user = await collection.findOne({_id : ObjectID(userId)});
+    
+    return (user) ? {id:user._id,email:user.email} : false;
+  }
+
 }
-
-
-
 
 const dbClient = new DBClient();
 export { dbClient as default };
