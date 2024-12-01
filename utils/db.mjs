@@ -65,7 +65,6 @@ class DBClient {
   async getFileById(fileId){
     const collection = this.db.collection('files');
     let file = await collection.findOne({_id : ObjectID(fileId)});
-    
     return (file) ? file : false;
   }
 
@@ -74,6 +73,20 @@ class DBClient {
     let insert = await collection.insertOne(file);
     let dbFile = this.getFileById(insert.insertedId);
     return (dbFile) ? dbFile : false;
+  }
+
+  async getFile(userId, fileId){
+    const collection = this.db.collection('files');
+    let file = await collection.findOne({ _id: ObjectID(fileId),userId: userId });
+    return (file) ? file : false;
+  }
+
+  async getAllFilesIndex(userId,parentId,page,maxItem) {
+    const collection = this.db.collection('files');
+    page=parseInt(page, 10);
+    const skip = page*maxItem    
+    let filesIndex = await collection.find({ userId: userId,parentId: parentId}).toArray();    
+    return filesIndex
   }
 
 }

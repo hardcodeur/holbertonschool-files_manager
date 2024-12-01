@@ -1,3 +1,4 @@
+import { stringify } from "querystring";
 import dbClient from "../utils/db.mjs";
 import redisClient  from "../utils/redis.mjs";
 import { v4 as uuidv4 } from 'uuid';
@@ -14,6 +15,8 @@ const postUpload = async (req,res) => {
 
     const userCacheId = await redisClient.get(key);
     if(!userCacheId) return res.status(401).json({error : "Unauthorized"});
+
+
     const fileName = req.body.name || null;
     const fileType = req.body.type || null;
     const fileParentId = req.body.parentId || 0;
@@ -59,4 +62,41 @@ const postUpload = async (req,res) => {
     return res.status(401).json({id: dbFile._id ,userId : dbFile.userId, name : dbFile.name, type: dbFile.type, isPublic: dbFile.isPublic,parentId:dbFile.parentId });
 }
 
-module.exports = {postUpload}
+const getShow = async (req,res)=>{
+    const authorizationHeader = req.get('X-Token');
+    if(!authorizationHeader) return res.status(401).json({error : "Unauthorized"});
+    const token = authorizationHeader.trim();
+    const key = `auth_${token}`;
+
+    const userCacheId = await redisClient.get(key);
+    if(!userCacheId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const fileId = req.params.id;
+    const dbFile = await dbClient.getFile(userCacheId,fileId);
+    if(!dbFile) return res.status(404).json({ error: 'Not found' });
+
+    return res.json({id: dbFile._id ,userId : dbFile.userId, name : dbFile.name, type: dbFile.type, isPublic: dbFile.isPublic,parentId:dbFile.parentId })
+}
+
+
+const getIndex = async (req,res)=>{
+
+    const authorizationHeader = req.get('X-Token');
+    if(!authorizationHeader) return res.status(401).json({error : "Unauthorized"});
+
+    const token = authorizationHeader.trim();
+    const key = `auth_${token}`;
+
+    const userCacheId = await redisClient.get(key);
+    if(!userCacheId) return res.status(401).json({ error: 'Unauthorized' });
+
+    let { parentId, page } = req.query;
+    if (!parentId) parentId = 0;
+    if (!page) page = 0;
+    const maxItem = 20;
+    const dbIndex = await dbClient.getAllFilesIndex(userCacheId,parentId,page,maxItem);
+
+    return res.status(201).json(dbIndex);
+}
+
+module.exports = {postUpload,getShow,getIndex}
