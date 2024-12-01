@@ -38,25 +38,29 @@ const postUpload = async (req,res) => {
     if(fileType === "folder"){
         const dbFolder = await dbClient.insertFiles(fileInsert);
         return res.status(201).json({id: dbFolder._id ,userId : dbFolder.userId, name : dbFolder.name, type: dbFolder.type, isPublic: dbFolder.isPublic,parentId:dbFolder.parentId });
+    }else{
+
+        const folderPath = process.env.FOLDER_PATH || "/tmp/files_manager";
+        const newFileName = uuidv4();
+        const filePath = `${folderPath}/${newFileName}`;
+    
+        const buffer = Buffer.from(fileData, 'base64').toString('utf-8');
+    
+        if (!fs.existsSync(folderPath)) {
+            fs.mkdirSync(folderPath, { recursive: true });
+        }
+    
+        fs.writeFileSync(filePath, buffer);
+    
+        fileInsert.localPath = filePath;
+    
+        const dbFile = await dbClient.insertFiles(fileInsert);
+    
+        return res.status(401).json({id: dbFile._id ,userId : dbFile.userId, name : dbFile.name, type: dbFile.type, isPublic: dbFile.isPublic,parentId:dbFile.parentId });
+
     }
 
-    const folderPath = process.env.FOLDER_PATH || "/tmp/files_manager";
-    const newFileName = uuidv4();
-    const filePath = `${folderPath}/${newFileName}`;
 
-    const buffer = Buffer.from(fileData, 'base64').toString('utf-8');
-
-    if (!fs.existsSync(folderPath)) {
-        fs.mkdirSync(folderPath, { recursive: true });
-    }
-
-    fs.writeFileSync(filePath, buffer);
-
-    fileInsert.localPath = filePath;
-
-    const dbFile = await dbClient.insertFiles(fileInsert);
-
-    return res.status(401).json({id: dbFile._id ,userId : dbFile.userId, name : dbFile.name, type: dbFile.type, isPublic: dbFile.isPublic,parentId:dbFile.parentId });
 }
 
 module.exports = {postUpload}
