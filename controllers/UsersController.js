@@ -1,45 +1,44 @@
-import dbClient from "../utils/db.mjs";
-import redisClient  from "../utils/redis.mjs";
+import dbClient from '../utils/db.mjs';
+import redisClient from '../utils/redis.mjs';
 
-const postNew = async(req, res)=>{
-    const {email,password}= req.body;
-    
-    if(!email){
-        return res.status(400).json({ error: 'Missing email' });
-    }
-    if(!password){
-        return res.status(400).json({ error: 'Missing password' });
-    }
-    
-    const userEmailExist = await dbClient.userEmailExist(email);
-    if(userEmailExist){
-        return res.status(400).json({ error: 'Already exist' });
-    }
-    const lastInsert = await dbClient.insertNewUser(email,password)
-    return res.status(201).json(lastInsert);
-}
+const postNew = async (req, res) => {
+  const { email, password } = req.body;
 
-const getMe = async (req,res) => {
-    const authorizationHeader = req.get('X-Token');
-    if(!authorizationHeader){
-        return res.status(401).json({error : "Unauthorized"});
-    }
+  if (!email) {
+    return res.status(400).json({ error: 'Missing email' });
+  }
+  if (!password) {
+    return res.status(400).json({ error: 'Missing password' });
+  }
 
-    const token = authorizationHeader.trim();
-    const key = `auth_${token}`;
+  const userEmailExist = await dbClient.userEmailExist(email);
+  if (userEmailExist) {
+    return res.status(400).json({ error: 'Already exist' });
+  }
+  const lastInsert = await dbClient.insertNewUser(email, password);
+  return res.status(201).json(lastInsert);
+};
 
-    const userCacheId = await redisClient.get(key);
-    if(!userCacheId){
-        return res.status(401).json({error : "Unauthorized"});
-    }
+const getMe = async (req, res) => {
+  const authorizationHeader = req.get('X-Token');
+  if (!authorizationHeader) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
 
-    const user = await dbClient.getUserById(userCacheId);
-    if(!user){
-        return res.status(401);
-    }
-    
-    return res.json(user);
+  const token = authorizationHeader.trim();
+  const key = `auth_${token}`;
 
-}
+  const userCacheId = await redisClient.get(key);
+  if (!userCacheId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
 
-module.exports = {postNew,getMe};
+  const user = await dbClient.getUserById(userCacheId);
+  if (!user) {
+    return res.status(401);
+  }
+
+  return res.json(user);
+};
+
+module.exports = { postNew, getMe };
