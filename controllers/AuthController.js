@@ -44,7 +44,6 @@ const getDisconnect = async (req,res)=>{
     const key = `auth_${token}`;
 
     const userId = await redisClient.get(key);
-    console.log(key);
 
     if(!userId){
         return res.status(401).json({error : "Unauthorized"});

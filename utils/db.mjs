@@ -1,7 +1,7 @@
 import pkg from 'mongodb';
 import crypto from "crypto";
 
-const { MongoClient } = pkg;
+const { MongoClient,ObjectID } = pkg;
 
 const host = process.env.DB_HOST || 'localhost';
 const port = process.env.DB_PORT || 27017;
@@ -60,6 +60,20 @@ class DBClient {
     let user = await collection.findOne({_id : ObjectID(userId)});
     
     return (user) ? {id:user._id,email:user.email} : false;
+  }
+
+  async getFileById(fileId){
+    const collection = this.db.collection('files');
+    let file = await collection.findOne({_id : ObjectID(fileId)});
+    
+    return (file) ? file : false;
+  }
+
+  async insertFiles(file){
+    const collection = this.db.collection('files');
+    let insert = await collection.insertOne(file);
+    let dbFile = this.getFileById(insert.insertedId);
+    return (dbFile) ? dbFile : false;
   }
 
 }

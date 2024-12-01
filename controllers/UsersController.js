@@ -37,7 +37,7 @@ const getMe = async (req,res) => {
     if(!user){
         return res.status(401);
     }
-    console.log(user);
+    
     return res.json(user);
 
 }
