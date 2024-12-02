@@ -3,6 +3,7 @@ import dbClient from '../utils/db.mjs';
 import redisClient from '../utils/redis.mjs';
 
 const fs = require('fs');
+const mime = require('mime-types');
 
 const postUpload = async (req, res) => {
   const authorizationHeader = req.get('X-Token');
@@ -98,8 +99,19 @@ const getIndex = async (req, res) => {
   if (!page) page = 0;
   const maxItem = 20;
   const dbIndex = await dbClient.getAllFilesIndex(userCacheId, parentId, page, maxItem);
+  console.log(dbIndex);
+  console.log(dbIndex.length);
+  if (!dbIndex || !dbIndex.length ) return res.status(404).json({ error: 'Not found' });
 
-  return res.status(201).json(dbIndex);
+  const index = [];
+
+  dbIndex.forEach(file => {
+    index.push({
+      id: file._id, userId: file.userId, name: file.name, type: file.type, isPublic: file.isPublic, parentId: file.parentId,
+    })
+  });
+
+  return res.status(201).json(index);
 };
 
 const putPublish = async (req, res) => {
@@ -147,6 +159,35 @@ const putUnpublish = async (req, res) => {
   });
 };
 
+const getFile = async (req, res) => {
+  const authorizationHeader = req.get('X-Token');
+  if (!authorizationHeader) return res.status(401).json({ error: 'Not found' });
+
+  const token = authorizationHeader.trim();
+  const key = `auth_${token}`;
+
+  const userCacheId = await redisClient.get(key);
+  if (!userCacheId) return res.status(401).json({ error: 'Not found' });
+
+  const fileId = req.params.id;
+  const file = await dbClient.getFile(userCacheId, fileId);
+  console.log(1);
+  if (!file) return res.status(404).json({ error: 'Not found' });
+  console.log(2);
+  if(!file.isPublic) return res.status(404).json({ error: 'Not found' });
+  console.log(3);
+  if (file.type === 'folder' ) return res.status(400).json({ error: "A folder doesn't have content" });
+  console.log(4);
+  if (!fs.existsSync(file.localPath)) return res.status(404).json({ error: 'Not found' });
+
+  const mimeType = mime.contentType(file.name) || 'application/octet-stream';
+  res.setHeader('Content-Type', mimeType);
+  const fileData = fs.readFileSync(file.localPath);
+  return res.send(fileData);
+
+
+};
+
 module.exports = {
-  postUpload, getShow, getIndex, putPublish, putUnpublish,
+  postUpload, getShow, getIndex, putPublish, putUnpublish,getFile
 };
