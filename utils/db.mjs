@@ -76,7 +76,7 @@ class DBClient {
 
   async getFile(userId, fileId) {
     const collection = this.db.collection('files');
-    const file = await collection.findOne({ _id: ObjectID(fileId), userId });
+    const file = await collection.findOne({ _id: ObjectID(fileId), userId: userId});
     return (file) || false;
   }
 
