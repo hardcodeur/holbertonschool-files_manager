@@ -18,6 +18,9 @@ const getConnect = async (req, res) => {
   const userLoginEncode = authorization[1].trim();
   const userLogin = Buffer.from(userLoginEncode, 'base64').toString('utf-8');
   const login = userLogin.split(':');
+  if (!login || login.length === 1) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
   const email = login[0];
   const pass = login[1];
 
