@@ -58,7 +58,7 @@ const postUpload = async (req, res) => {
 
   const dbFile = await dbClient.insertFiles(fileInsert);
 
-  return res.status(401).json({
+  return res.status(400).json({
     id: dbFile._id, userId: dbFile.userId, name: dbFile.name, type: dbFile.type, isPublic: dbFile.isPublic, parentId: dbFile.parentId,
   });
 };
