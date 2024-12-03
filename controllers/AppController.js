@@ -1,5 +1,5 @@
-import redisClient from '../utils/redis';
-import dbClient from '../utils/db.mjs';
+const dbClient = require('../utils/db');
+const redisClient = require('../utils/redis');
 
 const getStatus = async (req, res) => {
   res.status(200).json({ redis: redisClient.isAlive(), db: dbClient.isAlive() });
