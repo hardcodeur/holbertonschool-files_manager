@@ -22,8 +22,8 @@ const getConnect = async (req, res) => {
   if (!login || login.length === 1) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-  const email = login[0];
-  const pass = login[1];
+  const email = login[0].toString('utf-8');
+  const pass = login[1].toString('utf-8');
 
   const user = await dbClient.getUser(email, pass);
   if (!user) {
@@ -52,7 +52,7 @@ const getDisconnect = async (req, res) => {
   }
 
   await redisClient.del(key);
-  return res.status(204);
+  return res.status(204).end();
 };
 
 module.exports = { getConnect, getDisconnect };
