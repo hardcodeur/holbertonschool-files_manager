@@ -67,7 +67,6 @@ class DBClient {
     return (file) || false;
   }
 
-
   async insertFiles(file) {
     const collection = this.db.collection('files');
     const insert = await collection.insertOne(file);
@@ -76,8 +75,8 @@ class DBClient {
   }
 
   async getFile(userId, fileId) {
-    const collection = this.db.collection('files');    
-    const file = await collection.findOne({ _id: ObjectID(fileId), userId: userId });
+    const collection = this.db.collection('files');
+    const file = await collection.findOne({ _id: ObjectID(fileId), userId });
     return (file) || false;
   }
 
@@ -90,12 +89,14 @@ class DBClient {
     return filesIndex;
   }
 
-  async updatePublishFileStatus(fileId,fileStatus) {
+  async updatePublishFileStatus(fileId, fileStatus) {
     const collection = this.db.collection('files');
-    const update = await collection.updateOne({ _id: ObjectID(fileId) },{$set: {isPublic: fileStatus}})
+    const update = await collection.updateOne(
+      { _id: ObjectID(fileId) },
+      { $set: { isPublic: fileStatus } },
+    );
     return (update) || false;
   }
-
 }
 
 const dbClient = new DBClient();
