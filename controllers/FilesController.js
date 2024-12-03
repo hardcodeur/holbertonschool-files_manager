@@ -155,20 +155,26 @@ const putUnpublish = async (req, res) => {
 };
 
 const getFile = async (req, res) => {
-  const authorizationHeader = req.get('X-Token');
-  if (!authorizationHeader) return res.status(401).json({ error: 'Not found' });
-
-  const token = authorizationHeader.trim();
-  const key = `auth_${token}`;
-
-  const userCacheId = await redisClient.get(key);
-  if (!userCacheId) return res.status(401).json({ error: 'Not found' });
-
+  
   const fileId = req.params.id;
-  const file = await dbClient.getFile(userCacheId, fileId);
+  if (!fileId) return res.status(404).json({ error: 'Not found' });
+  const file = await dbClient.getFileById(fileId);
   if (!file) return res.status(404).json({ error: 'Not found' });
   if(!file.isPublic) return res.status(404).json({ error: 'Not found' });
   if (file.type === 'folder' ) return res.status(400).json({ error: "A folder doesn't have content" });
+
+  if(!file.isPublic){
+    const authorizationHeader = req.get('X-Token');
+    if (!authorizationHeader) return res.status(401).json({ error: 'Not found' });
+  
+    const token = authorizationHeader.trim();
+    const key = `auth_${token}`;
+  
+    const userCacheId = await redisClient.get(key);
+    if (!userCacheId) return res.status(401).json({ error: 'Not found' });
+    if(userCacheId !== String(file.userId)) return res.status(401).json({ error: 'Not found' });
+  }
+
   if (!fs.existsSync(file.localPath)) return res.status(404).json({ error: 'Not found' });
 
   const mimeType = mime.contentType(file.name) || 'application/octet-stream';
