@@ -89,7 +89,7 @@ const getIndex = async (req, res) => {
   const key = `auth_${token}`;
 
   const userCacheId = await redisClient.get(key);
-  if (!userCacheId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!userCacheId || userCacheId.length === 0) return res.status(401).json({ error: 'Unauthorized' });
 
   let { parentId, page } = req.query;
   if (!parentId) parentId = 0;

@@ -84,7 +84,7 @@ class DBClient {
     const collection = this.db.collection('files');
     const pageInt = parseInt(page, 10);
     const skip = pageInt * maxItem;
-    const filesIndex = await collection.find({ userId, parentId })
+    const filesIndex = await collection.find({ userId: userId, parentId: parentId })
       .skip(skip).limit(maxItem).toArray();
     return filesIndex;
   }
