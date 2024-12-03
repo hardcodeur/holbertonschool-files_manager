@@ -76,7 +76,7 @@ const getShow = async (req, res) => {
   const dbFile = await dbClient.getFile(userCacheId, fileId);
   if (!dbFile) return res.status(404).json({ error: 'Not found' });
 
-  return res.json({
+  return res.status(200).json({
     id: dbFile._id, userId: dbFile.userId, name: dbFile.name, type: dbFile.type, isPublic: dbFile.isPublic, parentId: dbFile.parentId,
   });
 };
