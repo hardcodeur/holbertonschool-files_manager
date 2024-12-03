@@ -96,8 +96,8 @@ const getIndex = async (req, res) => {
   if (!page) page = 0;
   const maxItem = 20;
   const dbIndex = await dbClient.getAllFilesIndex(userCacheId, parentId, page, maxItem);
-  if (!dbIndex || !dbIndex.length ) return res.status(404).json({ error: 'Not found' });
-
+  if (!dbIndex) return res.status(404).json({ error: 'Not found' });
+  
   const index = [];
 
   dbIndex.forEach(file => {
