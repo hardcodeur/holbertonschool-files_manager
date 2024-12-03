@@ -1,10 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import dbClient from '../utils/db.mjs';
+import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
-
-function isBase64(str) {
-  return str.match(/^[A-Za-z0-9+/=]+$/);
-}
 
 const getConnect = async (req, res) => {
   const authorizationHeader = req.get('Authorization');
@@ -20,8 +16,7 @@ const getConnect = async (req, res) => {
 
   const authorization = authorizationHeader.split(' ');
   const userLoginEncode = authorization[1].trim();
-  if(isBase64(userLoginEncode)) return res.status(401).json({ error: 'Unauthorized' });
-  const userLogin = atob(userLoginEncode);
+  const userLogin = Buffer.from(userLoginEncode, 'base64').toString('utf-8');
   const login = userLogin.split(':');
   const email = login[0];
   const pass = login[1];
