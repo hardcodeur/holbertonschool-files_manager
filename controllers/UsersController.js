@@ -32,7 +32,7 @@ const getMe = async (req, res) => {
   if (!userCacheId) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-
+  
   const user = await dbClient.getUserById(userCacheId);
   if (!user) {
     return res.status(401);

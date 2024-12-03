@@ -14,21 +14,18 @@ const postUpload = async (req, res) => {
 
   const userCacheId = await redisClient.get(key);
   if (!userCacheId) return res.status(401).json({ error: 'Unauthorized' });
-
+  
   const fileName = req.body.name || null;
   const fileType = req.body.type || null;
-  const fileParentId = req.body.parentId || 0;
+  const fileParentId = req.body.parentId || "0";
   const fileIsPublic = req.body.isPublic || false;
   const fileData = req.body.data || null;
 
   if (!fileName) return res.status(400).json({ error: 'Missing name' });
-
   const fileTypeAccept = ['folder', 'file', 'image'];
   if (!fileType || !fileTypeAccept.includes(fileType)) return res.status(400).json({ error: 'Missing type' });
-
   if (!fileData && fileType != 'folder') return res.status(400).json({ error: 'Missing data' });
-
-  if (fileParentId) {
+  if (fileParentId !== "0") {
     const parentFile = await dbClient.getFileById(fileParentId);
     if (!parentFile) return res.status(400).json({ error: 'Parent is not a folder' });
     if (parentFile && parentFile.type !== 'folder') return res.status(400).json({ error: 'Parent is not a folder' });
@@ -99,8 +96,6 @@ const getIndex = async (req, res) => {
   if (!page) page = 0;
   const maxItem = 20;
   const dbIndex = await dbClient.getAllFilesIndex(userCacheId, parentId, page, maxItem);
-  console.log(dbIndex);
-  console.log(dbIndex.length);
   if (!dbIndex || !dbIndex.length ) return res.status(404).json({ error: 'Not found' });
 
   const index = [];
@@ -171,13 +166,9 @@ const getFile = async (req, res) => {
 
   const fileId = req.params.id;
   const file = await dbClient.getFile(userCacheId, fileId);
-  console.log(1);
   if (!file) return res.status(404).json({ error: 'Not found' });
-  console.log(2);
   if(!file.isPublic) return res.status(404).json({ error: 'Not found' });
-  console.log(3);
   if (file.type === 'folder' ) return res.status(400).json({ error: "A folder doesn't have content" });
-  console.log(4);
   if (!fs.existsSync(file.localPath)) return res.status(404).json({ error: 'Not found' });
 
   const mimeType = mime.contentType(file.name) || 'application/octet-stream';
