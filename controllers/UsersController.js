@@ -1,5 +1,5 @@
-const dbClient = require('../utils/db');
-const redisClient = require('../utils/redis');
+import redisClient from '../utils/redis';
+import dbClient from '../utils/db';
 
 const postNew = async (req, res) => {
   const { email, password } = req.body;
@@ -25,7 +25,7 @@ const getMe = async (req, res) => {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const token = authorizationHeader.trim();
+  const token = authorizationHeader.trim(); 
   const key = `auth_${token}`;
 
   const userCacheId = await redisClient.get(key);
