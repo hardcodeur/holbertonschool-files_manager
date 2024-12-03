@@ -1,5 +1,5 @@
-import dbClient from '../utils/db.mjs';
-import redisClient from '../utils/redis.mjs';
+import dbClient from '../utils/db';
+import redisClient from '../utils/redis';
 
 const postNew = async (req, res) => {
   const { email, password } = req.body;
